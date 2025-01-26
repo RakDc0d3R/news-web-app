@@ -1,0 +1,10 @@
+.image-container {
+  height: 150px; /* Fixed height for the image container */
+  width: 100%; /* Full width of the card */
+  background-color: #f8f9fa; /* Light gray background for default image */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden; /* Ensures the image doesn't overflow */
+  position: relative;
+}
