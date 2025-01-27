@@ -3,9 +3,9 @@ import dayjs from "dayjs";
 import qs from "qs";
 
 const API_KEYS = {
-  newsAPI: "73e1389fc3b44b1295a0562e6e2d7d0b",
-  theGuardian: "86730ef99d4c4484a49fe1b1ca47ea10",
-  newsDataHub: "vBK6-EHLdXd5KxQ6Lc_gyW5Wvt2O1Hglsu6iKwXdDpQ",
+  newsAPI: "0087d62d3fd84a68bbefef311796672f",
+  theGuardian: "574e0f6b67de4d33a01af061d84b5747",
+  newsDataHub: "Tel81Dc-5KWtCW-SH9lyjaUC5fXBsdnahpiPDcq3sOI",
 };
 
 export const fetchLatestArticles = async (filters: {
@@ -43,68 +43,88 @@ export const fetchLatestArticles = async (filters: {
 
   const apiCalls: Promise<any>[] = [];
 
-  if (!source || source.split(",").includes("news api") || source.split(",").includes("all sources")) {
-    const categories = category?.split(",").map(item => item.trim())
+  if (
+    !source ||
+    source.split(",").includes("news api") ||
+    source.split(",").includes("all sources")
+  ) {
+    const categories = category?.split(",").map((item) => item.trim());
     const categoriesQuery = categories?.map((value) => {
-      return " OR " + value
-    })
+      return " OR " + value;
+    });
     apiCalls.push(
-      axios.get(`https://newsapi.org/v2/everything`, {
-        params: {
-          q: searchKeyword ? searchKeyword + `${category ? categoriesQuery : ""}` : 'latest' + `${category ? categoriesQuery : ""}`,
-          from: formattedFromDate,
-          to: formattedToDate,
-          apiKey: API_KEYS.newsAPI,
-          page: page,
-          pageSize: pageSize,
-          domains: 'techcrunch.com,thenextweb.com',
-        },
-      }).catch(() => undefined)
+      axios
+        .get(`https://newsapi.org/v2/everything`, {
+          params: {
+            q: searchKeyword
+              ? searchKeyword + `${category ? categoriesQuery : ""}`
+              : "latest" + `${category ? categoriesQuery : ""}`,
+            from: formattedFromDate,
+            to: formattedToDate,
+            apiKey: API_KEYS.newsAPI,
+            page: page,
+            pageSize: pageSize,
+            domains: "techcrunch.com,thenextweb.com",
+          },
+        })
+        .catch(() => undefined)
     );
   } else {
     apiCalls.push(Promise.resolve(undefined));
   }
 
-  if (!source || source.split(",").includes("the guardian") || source.split(",").includes("all sources")) {
+  if (
+    !source ||
+    source.split(",").includes("the guardian") ||
+    source.split(",").includes("all sources")
+  ) {
     apiCalls.push(
-      axios.get(`https://api.worldnewsapi.com/search-news`, {
-        params: {
-          "source-country": "us",
-          "api-key": API_KEYS.theGuardian,
-          text: searchKeyword,
-          categories: 'health,entertainment,',
-          "earliest-publish-date": formattedFromDate,
-          "latest-publish-date": formattedToDate,
-          offset: skip,
-          number: pageSize,
-        },
-      }).catch(() => undefined)
+      axios
+        .get(`https://api.worldnewsapi.com/search-news`, {
+          params: {
+            "source-country": "us",
+            "api-key": API_KEYS.theGuardian,
+            text: searchKeyword,
+            categories: "health,entertainment,",
+            "earliest-publish-date": formattedFromDate,
+            "latest-publish-date": formattedToDate,
+            offset: skip,
+            number: pageSize,
+          },
+        })
+        .catch(() => undefined)
     );
   } else {
     apiCalls.push(Promise.resolve(undefined));
   }
 
-  if (!source || source.split(",").includes("news data hub") || source.split(",").includes("all sources")) {
-    const categories = category?.split(",").map(item => item.trim());
+  if (
+    !source ||
+    source.split(",").includes("news data hub") ||
+    source.split(",").includes("all sources")
+  ) {
+    const categories = category?.split(",").map((item) => item.trim());
 
     apiCalls.push(
-      axios.get(`https://api.newsdatahub.com/v1/news`, {
-        headers: {
-          "X-Api-Key": API_KEYS.newsDataHub,
-        },
-        params: {
-          country: "us",
-          q: searchKeyword,
-          topic: categories,
-          start_date: formattedFromDate,
-          end_date: formattedToDate,
-          cursor: nextPageId,
-          per_page: pageSize,
-        },
-        paramsSerializer: (params) => {
-          return qs.stringify(params, { arrayFormat: "repeat" });
-        },
-      }).catch(() => undefined)
+      axios
+        .get(`https://api.newsdatahub.com/v1/news`, {
+          headers: {
+            "X-Api-Key": API_KEYS.newsDataHub,
+          },
+          params: {
+            country: "us",
+            q: searchKeyword,
+            topic: categories,
+            start_date: formattedFromDate,
+            end_date: formattedToDate,
+            cursor: nextPageId,
+            per_page: pageSize,
+          },
+          paramsSerializer: (params) => {
+            return qs.stringify(params, { arrayFormat: "repeat" });
+          },
+        })
+        .catch(() => undefined)
     );
   } else {
     apiCalls.push(Promise.resolve(undefined));
@@ -126,7 +146,7 @@ export const fetchLatestArticles = async (filters: {
               : "NA",
           }))
         : [];
-    
+
     const theGuardianArticles =
       responses[1]?.status === "fulfilled" && responses[1].value?.data?.news
         ? responses[1]?.value?.data?.news?.map((value: any) => ({
@@ -152,7 +172,10 @@ export const fetchLatestArticles = async (filters: {
             publishedDate: value?.pub_date
               ? dayjs(value?.pub_date).format("DD/MM/YYYY")
               : "NA",
-            nextCursor: responses[2]?.status === "fulfilled" ? responses[2]?.value?.data?.next_cursor : undefined,
+            nextCursor:
+              responses[2]?.status === "fulfilled"
+                ? responses[2]?.value?.data?.next_cursor
+                : undefined,
           }))
         : [];
 
