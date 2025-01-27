@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchLatestArticles } from "../services/api";
 import NewsItem from "./NewsItem";
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
 
 export type NewsItemType = {
   title: string;
@@ -12,28 +14,24 @@ export type NewsItemType = {
   nextCursor?: string;
 };
 
-const NewsBoard = (props: {
-  category?: string;
-  fromDate?: string;
-  toDate?: string;
-  searchKeyword?: string;
-}) => {
+const NewsBoard = () => {
   const [articles, setArticles] = useState<NewsItemType[]>([]);
   const [loading, setLoading] = useState(false);
   const [skip, setSkip] = useState(0);
   const [page, setPage] = useState(1);
   const [nextPageId, setNextPageId] = useState<string | undefined>();
   const [hasMore, setHasMore] = useState(true);
+  const { category, fromDate, toDate, searchKeyword } = useSelector((state: RootState) => state.news);
 
   const fetchArticles = useCallback(async () => {
     console.log('hey')
     setLoading(true);
     try {
       const data = await fetchLatestArticles({
-        category: props?.category,
-        fromDate: props?.fromDate,
-        toDate: props?.toDate,
-        searchKeyword: props?.searchKeyword,
+        category: category,
+        fromDate: fromDate,
+        toDate: toDate,
+        searchKeyword: searchKeyword,
         skip: skip,
         page: page,
         nextPageId: nextPageId,
@@ -50,7 +48,7 @@ const NewsBoard = (props: {
     } finally {
       setLoading(false);
     }
-  }, [skip, nextPageId, page, props?.category, props?.fromDate, props?.toDate, props?.searchKeyword]);
+  }, [skip, nextPageId, page, category, fromDate, toDate, searchKeyword]);
 
   useEffect(() => {
     setArticles([]);
@@ -58,11 +56,11 @@ const NewsBoard = (props: {
     setPage(1)
     setNextPageId(undefined)
     setHasMore(true);
-  }, [props?.category, props?.fromDate, props?.toDate, props?.searchKeyword]);
+  }, [category, fromDate, toDate, searchKeyword]);
 
   useEffect(() => {
     if (hasMore) fetchArticles();
-  }, [skip, nextPageId, page]);
+  }, [skip, nextPageId, page, fetchArticles]);
 
   useEffect(() => {
     const handleScroll = () => {

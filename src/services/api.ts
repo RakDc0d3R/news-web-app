@@ -1,5 +1,4 @@
 import axios from "axios";
-import { NewsItemType } from "../components/NewsBoard";
 import dayjs from "dayjs";
 
 const API_KEYS = {
@@ -19,68 +18,93 @@ export const fetchLatestArticles = async (filters: {
   nextPageId?: string;
 }) => {
   const { category, fromDate, toDate, searchKeyword, skip, page, pageSize, nextPageId } = filters;
-  //   const response = await axios.get(`https://newsapi.org/v2/top-headlines`, {
-  //     params: {
-  //       category: category,
-  //       country: "us",
-  //       apiKey: API_KEYS.newsAPI,
-  //     },
-  //   });
-  // return response.data.articles;
-  
-//   const response = await axios.get(`https://api.worldnewsapi.com/search-news`, {
-//     params: {
-//       "source-country": "us",
-//       "api-key": API_KEYS.theGuardian,
-//       text: searchKeyword,
-//       categories: category,
-//       "earliest-publish-date": fromDate
-//         ? dayjs(fromDate)?.format("YYYY-MM-DD")
-//         : !fromDate && toDate
-//         ? dayjs().subtract(29, "day")?.format("YYYY-MM-DD")
-//         : undefined,
-//       "latest-publish-date": toDate ? dayjs(toDate)?.format("YYYY-MM-DD") : undefined,
-//       offset: skip,
-//       number: pageSize
-//     },
-//   });
-//   return response?.data?.news?.map((value: any) => {
-//     return {
-//       title: value?.title,
-//       description: value?.text,
-//       url: value?.url,
-//       urlToImage: value?.image,
-//       category: value?.category,
-//       publishedDate: value?.publish_date ? dayjs(value?.publish_date).format('DD/MM/YYYY') : 'NA'
-//     } as NewsItemType;
-//   });
-const response = await axios.get(`https://api.newsdatahub.com/v1/news`, {
-    headers: {
-'X-Api-Key': API_KEYS.newsDataHub,
-    },
+
+  const formattedFromDate = fromDate
+    ? dayjs(fromDate)?.format("YYYY-MM-DD")
+    : !fromDate && toDate
+    ? dayjs().subtract(29, "day")?.format("YYYY-MM-DD")
+    : undefined;
+
+  const formattedToDate = toDate ? dayjs(toDate)?.format("YYYY-MM-DD") : undefined;
+
+  const newsAPICall = axios.get(`https://newsapi.org/v2/everything`, {
     params: {
-      country: "us",      
-      q: searchKeyword,
-      topic: category,
-      start_date: fromDate
-        ? dayjs(fromDate)?.format("YYYY-MM-DD")
-        : !fromDate && toDate
-        ? dayjs().subtract(29, "day")?.format("YYYY-MM-DD")
-        : undefined,
-        end_date: toDate ? dayjs(toDate)?.format("YYYY-MM-DD") : undefined,
-        cursor: nextPageId,
-      per_page: pageSize
+      q: searchKeyword + `${category ? "+" + category : ""}`,
+      from: formattedFromDate,
+      to: formattedToDate,
+      apiKey: API_KEYS.newsAPI,
+      page: page,
+      pageSize: pageSize,
     },
   });
-  return response?.data?.data?.map((value: any) => {
-    return {
+
+  const theGuardianCall = axios.get(`https://api.worldnewsapi.com/search-news`, {
+    params: {
+      "source-country": "us",
+      "api-key": API_KEYS.theGuardian,
+      text: searchKeyword,
+      categories: category,
+      "earliest-publish-date": formattedFromDate,
+      "latest-publish-date": formattedToDate,
+      offset: skip,
+      number: pageSize,
+    },
+  });
+
+  const newsDataHubCall = axios.get(`https://api.newsdatahub.com/v1/news`, {
+    headers: {
+      "X-Api-Key": API_KEYS.newsDataHub,
+    },
+    params: {
+      country: "us",
+      q: searchKeyword,
+      topic: category,
+      start_date: formattedFromDate,
+      end_date: formattedToDate,
+      cursor: nextPageId,
+      per_page: pageSize,
+    },
+  });
+
+  try {
+    const [newsAPIResponse, theGuardianResponse, newsDataHubResponse] = await Promise.all([
+      newsAPICall,
+      theGuardianCall,
+      newsDataHubCall,
+    ]);
+
+    const newsAPIArticles = newsAPIResponse?.data?.articles?.map((value: any) => ({
+      title: value?.title,
+      description: value?.description,
+      url: value?.url,
+      urlToImage: value?.urlToImage,
+      category: value?.category,
+      publishedDate: value?.publishedAt ? dayjs(value?.publishedAt).format("DD/MM/YYYY") : "NA",
+    })) || [];
+
+    const theGuardianArticles = theGuardianResponse?.data?.news?.map((value: any) => ({
+      title: value?.title,
+      description: value?.text,
+      url: value?.url,
+      urlToImage: value?.image,
+      category: value?.category,
+      publishedDate: value?.publish_date ? dayjs(value?.publish_date).format("DD/MM/YYYY") : "NA",
+    })) || [];
+
+    const newsDataHubArticles = newsDataHubResponse?.data?.data?.map((value: any) => ({
       title: value?.title,
       description: value?.description,
       url: value?.article_link,
       urlToImage: value?.media_url,
       category: value?.topic,
-      publishedDate: value?.pub_date ? dayjs(value?.pub_date).format('DD/MM/YYYY') : 'NA',
-      nextCursor: response?.data?.next_cursor
-    } as NewsItemType;
-  });
+      publishedDate: value?.pub_date ? dayjs(value?.pub_date).format("DD/MM/YYYY") : "NA",
+      nextCursor: newsDataHubResponse?.data?.next_cursor,
+    })) || [];
+
+    const combinedArticles = [...newsAPIArticles, ...theGuardianArticles, ...newsDataHubArticles];
+    return combinedArticles;
+  } catch (error) {
+    console.error("Error fetching articles:", error);
+    throw new Error("Failed to fetch articles from one or more sources");
+  }
 };

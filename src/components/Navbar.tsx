@@ -1,18 +1,10 @@
 import { useRef } from "react";
+import { useDispatch } from "react-redux";
+import { setCategory, setFromDate, setSearchKeyword, setToDate } from "../redux/newSlice";
 
-declare const bootstrap: {
-  Offcanvas: {
-    getInstance(element: HTMLElement): any;
-  };
-};
-
-const Navbar = (props: {
-  setCategory: (category?: string) => void;
-  setFromDate: (fromDate?: string) => void;
-  setToDate: (toDate?: string) => void;
-  setSearchKeyword: (searchKeyword?: string) => void;
-}) => {
+const Navbar = () => {
   const debounceTimeout = useRef<number | null>(null);
+  const dispatch = useDispatch();
 
   const handleSearch = (searchKeyword?: string) => {
     if (debounceTimeout.current !== null) {
@@ -20,31 +12,20 @@ const Navbar = (props: {
     }
 
     debounceTimeout.current = window.setTimeout(() => {
-      props?.setSearchKeyword(searchKeyword);
+      dispatch(setSearchKeyword(searchKeyword));
     }, 1000);
   };
 
   const handleCategoryChange = (category?: string) => {
-    props.setCategory(category === "all categories" ? undefined : category);
-    closeNavbar();
+    dispatch(setCategory(category));
   };
 
   const handleFromDateChange = (fromDate?: string) => {
-    props.setFromDate(fromDate);
-    closeNavbar();
+    dispatch(setFromDate(fromDate));
   };
 
   const handleToDateChange = (toDate?: string) => {
-    props.setToDate(toDate);
-    closeNavbar();
-  };
-
-  const closeNavbar = () => {
-    const offcanvasElement = document.getElementById("offcanvasNavbar");
-    if (offcanvasElement) {
-      const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasElement);
-      bsOffcanvas?.hide();
-    }
+    dispatch(setToDate(toDate));
   };
 
   return (
