@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useDispatch } from "react-redux";
-import { setCategory, setFromDate, setSearchKeyword, setToDate } from "../redux/newSlice";
+import { setCategory, setFromDate, setSearchKeyword, setSource, setToDate } from "../redux/newSlice";
 
 const Navbar = () => {
   const debounceTimeout = useRef<number | null>(null);
@@ -18,6 +18,10 @@ const Navbar = () => {
 
   const handleCategoryChange = (category?: string) => {
     dispatch(setCategory(category));
+  };
+
+  const handleSourceChange = (source?: string) => {
+    dispatch(setSource(source));
   };
 
   const handleFromDateChange = (fromDate?: string) => {
@@ -95,12 +99,12 @@ const Navbar = () => {
               <select
                 className="form-select text-capitalize"
                 aria-label="Small select example"
-                // onChange={(event: any) =>
-                //   handleCategoryChange(event?.target?.value)
-                // }
+                onChange={(event: any) =>
+                  handleSourceChange(event?.target?.value)
+                }
                 id="selectSource"
               >
-                {["all sources"].map((source) => (
+                {["all sources", "news api", "the guardian", "news data hub"].map((source) => (
                   <option
                     key={source}
                     value={source}

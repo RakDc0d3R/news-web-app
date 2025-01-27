@@ -21,20 +21,20 @@ const NewsBoard = () => {
   const [page, setPage] = useState(1);
   const [nextPageId, setNextPageId] = useState<string | undefined>();
   const [hasMore, setHasMore] = useState(true);
-  const { category, fromDate, toDate, searchKeyword } = useSelector((state: RootState) => state.news);
+  const { category, source, fromDate, toDate, searchKeyword } = useSelector((state: RootState) => state.news);
 
   const fetchArticles = useCallback(async () => {
-    console.log('hey')
     setLoading(true);
     try {
       const data = await fetchLatestArticles({
-        category: category,
-        fromDate: fromDate,
-        toDate: toDate,
-        searchKeyword: searchKeyword,
-        skip: skip,
-        page: page,
-        nextPageId: nextPageId,
+        category,
+        source,
+        fromDate,
+        toDate,
+        searchKeyword,
+        skip,
+        page,
+        nextPageId,
         pageSize: 10,
       });
 
@@ -48,7 +48,7 @@ const NewsBoard = () => {
     } finally {
       setLoading(false);
     }
-  }, [skip, nextPageId, page, category, fromDate, toDate, searchKeyword]);
+  }, [skip, nextPageId, page, category, source, fromDate, toDate, searchKeyword]);
 
   useEffect(() => {
     setArticles([]);
@@ -56,7 +56,7 @@ const NewsBoard = () => {
     setPage(1)
     setNextPageId(undefined)
     setHasMore(true);
-  }, [category, fromDate, toDate, searchKeyword]);
+  }, [category, source, fromDate, toDate, searchKeyword]);
 
   useEffect(() => {
     if (hasMore) fetchArticles();
