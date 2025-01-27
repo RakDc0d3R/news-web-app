@@ -95,14 +95,14 @@ export const fetchLatestArticles = async (filters: {
         params: {
           country: "us",
           q: searchKeyword,
-          topic: categories, // Pass the array directly
+          topic: categories,
           start_date: formattedFromDate,
           end_date: formattedToDate,
           cursor: nextPageId,
           per_page: pageSize,
         },
         paramsSerializer: (params) => {
-          return qs.stringify(params, { arrayFormat: "repeat" }); // Ensures topic=abc&topic=def
+          return qs.stringify(params, { arrayFormat: "repeat" });
         },
       }).catch(() => undefined)
     );
