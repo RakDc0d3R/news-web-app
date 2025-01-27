@@ -9,8 +9,8 @@ interface NewsState {
 }
 
 const initialState: NewsState = {
-  category: undefined,
-  source: undefined,
+  category: localStorage.getItem("news-5-categories") || undefined,
+  source: localStorage.getItem("news-5-sources") ||undefined,
   fromDate: undefined,
   toDate: undefined,
   searchKeyword: undefined,
@@ -21,7 +21,7 @@ const newsSlice = createSlice({
   initialState,
   reducers: {
     setCategory(state, action: PayloadAction<string | undefined>) {
-      state.category = action.payload;
+      state.category = action.payload;      
     },
     setSource(state, action: PayloadAction<string | undefined>) {
       state.source = action.payload;

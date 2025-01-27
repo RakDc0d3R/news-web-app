@@ -1,9 +1,10 @@
 import axios from "axios";
 import dayjs from "dayjs";
+import qs from "qs";
 
 const API_KEYS = {
-  newsAPI: "b5e5c18dc9d54dfb811cd21782ef39b6",
-  theGuardian: "14777193373741259005f072a8c6db4e",
+  newsAPI: "73e1389fc3b44b1295a0562e6e2d7d0b",
+  theGuardian: "86730ef99d4c4484a49fe1b1ca47ea10",
   newsDataHub: "vBK6-EHLdXd5KxQ6Lc_gyW5Wvt2O1Hglsu6iKwXdDpQ",
 };
 
@@ -42,16 +43,21 @@ export const fetchLatestArticles = async (filters: {
 
   const apiCalls: Promise<any>[] = [];
 
-  if (!source || source === "news api" || source === "all sources") {
+  if (!source || source.split(",").includes("news api") || source.split(",").includes("all sources")) {
+    const categories = category?.split(",").map(item => item.trim())
+    const categoriesQuery = categories?.map((value) => {
+      return " OR " + value
+    })
     apiCalls.push(
       axios.get(`https://newsapi.org/v2/everything`, {
         params: {
-          q: searchKeyword + `${category ? "+" + category : ""}`,
+          q: searchKeyword ? searchKeyword + `${category ? categoriesQuery : ""}` : 'latest' + `${category ? categoriesQuery : ""}`,
           from: formattedFromDate,
           to: formattedToDate,
           apiKey: API_KEYS.newsAPI,
           page: page,
           pageSize: pageSize,
+          domains: 'techcrunch.com,thenextweb.com',
         },
       }).catch(() => undefined)
     );
@@ -59,14 +65,14 @@ export const fetchLatestArticles = async (filters: {
     apiCalls.push(Promise.resolve(undefined));
   }
 
-  if (!source || source === "the guardian" || source === "all sources") {
+  if (!source || source.split(",").includes("the guardian") || source.split(",").includes("all sources")) {
     apiCalls.push(
       axios.get(`https://api.worldnewsapi.com/search-news`, {
         params: {
           "source-country": "us",
           "api-key": API_KEYS.theGuardian,
           text: searchKeyword,
-          categories: category,
+          categories: 'health,entertainment,',
           "earliest-publish-date": formattedFromDate,
           "latest-publish-date": formattedToDate,
           offset: skip,
@@ -78,7 +84,9 @@ export const fetchLatestArticles = async (filters: {
     apiCalls.push(Promise.resolve(undefined));
   }
 
-  if (!source || source === "news data hub" || source === "all sources") {
+  if (!source || source.split(",").includes("news data hub") || source.split(",").includes("all sources")) {
+    const categories = category?.split(",").map(item => item.trim());
+
     apiCalls.push(
       axios.get(`https://api.newsdatahub.com/v1/news`, {
         headers: {
@@ -87,11 +95,14 @@ export const fetchLatestArticles = async (filters: {
         params: {
           country: "us",
           q: searchKeyword,
-          topic: category,
+          topic: categories, // Pass the array directly
           start_date: formattedFromDate,
           end_date: formattedToDate,
           cursor: nextPageId,
           per_page: pageSize,
+        },
+        paramsSerializer: (params) => {
+          return qs.stringify(params, { arrayFormat: "repeat" }); // Ensures topic=abc&topic=def
         },
       }).catch(() => undefined)
     );

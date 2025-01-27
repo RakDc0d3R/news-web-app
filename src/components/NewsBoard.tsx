@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchLatestArticles } from "../services/api";
 import NewsItem from "./NewsItem";
-import { useSelector } from 'react-redux';
-import { RootState } from '../redux/store';
+import { useSelector } from "react-redux";
+import { RootState } from "../redux/store";
+import PreferenceModal from "./PreferenceModal";
 
 export type NewsItemType = {
   title: string;
@@ -21,7 +22,9 @@ const NewsBoard = () => {
   const [page, setPage] = useState(1);
   const [nextPageId, setNextPageId] = useState<string | undefined>();
   const [hasMore, setHasMore] = useState(true);
-  const { category, source, fromDate, toDate, searchKeyword } = useSelector((state: RootState) => state.news);
+  const { category, source, fromDate, toDate, searchKeyword } = useSelector(
+    (state: RootState) => state.news
+  );
 
   const fetchArticles = useCallback(async () => {
     setLoading(true);
@@ -48,13 +51,22 @@ const NewsBoard = () => {
     } finally {
       setLoading(false);
     }
-  }, [skip, nextPageId, page, category, source, fromDate, toDate, searchKeyword]);
+  }, [
+    skip,
+    nextPageId,
+    page,
+    category,
+    source,
+    fromDate,
+    toDate,
+    searchKeyword,
+  ]);
 
   useEffect(() => {
     setArticles([]);
     setSkip(0);
-    setPage(1)
-    setNextPageId(undefined)
+    setPage(1);
+    setNextPageId(undefined);
     setHasMore(true);
   }, [category, source, fromDate, toDate, searchKeyword]);
 
@@ -83,40 +95,48 @@ const NewsBoard = () => {
   }, [loading, hasMore]);
 
   return (
-    <div className="container">
-      <div
-        className="d-flex flex-column gap-4 position-relative"
-        style={{ top: "80px" }}
-      >
-        <div>
-          <h2>Latest News</h2>
-        </div>
-        <div>
-          <div className="row gy-3">
-            {articles?.map((news: any, index) => {
-              return (
-                <NewsItem
-                  key={index}
-                  news={{...news}}
-                />
-              );
-            })}
+    <>
+      <div className="container">
+        <div
+          className="d-flex flex-column gap-4 position-relative"
+          style={{ top: "80px" }}
+        >
+          <div>
+            <div className="d-flex justify-content-between">
+              <h2>Latest News</h2>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                data-bs-toggle="modal"
+                data-bs-target="#preferenceModal"
+              >
+                Set Preferences
+              </button>
+            </div>
+            <PreferenceModal />
           </div>
-        </div>
-        {loading && hasMore && (
-          <div className="d-flex justify-content-center my-4">
-            <div className="spinner-border text-primary" role="status">
-              <span className="sr-only"></span>
+          <div>
+            <div className="row gy-3">
+              {articles?.map((news: any, index) => {
+                return <NewsItem key={index} news={{ ...news }} />;
+              })}
             </div>
           </div>
-        )}
-        {!loading && articles.length === 0 && (
-          <div className="d-flex justify-content-center my-4">
-            <p>No articles found.</p>
-          </div>
-        )}
+          {loading && hasMore && (
+            <div className="d-flex justify-content-center my-4">
+              <div className="spinner-border text-primary" role="status">
+                <span className="sr-only"></span>
+              </div>
+            </div>
+          )}
+          {!loading && articles.length === 0 && (
+            <div className="d-flex justify-content-center my-4">
+              <p>No articles found.</p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
